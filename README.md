@@ -1,40 +1,7 @@
-# Auto OP Record
+# Auto OP Record（旧公開先）
 
-TELEPRO Staging — 音声を利用した手術動画ハイライトの操作デモ。
+公開・開発先は既存の `yukohara2501/telepro-collaboration-hub` の `telepro/` 配下へ統一しました。
 
-## デモ
+https://yukohara2501.github.io/telepro-collaboration-hub/
 
-https://yukohara2501.github.io/Auto-OP-Record/
-
-Hubの「ハイライトを開く」→ 該当Caseのハイライト・Outcome編集へ直接移動します。
-例：`https://yukohara2501.github.io/Auto-OP-Record/#/cases/K-2026-027/highlights`
-VOD一覧でもCaseを選べます。存在しないCaseへのリンクはエラーを表示し、別Caseを開きません。
-保存するのはこのブラウザのlocalStorage内のデモ設定のみです。`telepro-case-results-v1`にCase別のハイライトとOutcomeを保存し、同一オリジンにあるHubの結果履歴へ反映します。
-Caseへ戻るリンクもディープリンクです。実運用で別ドメインを使用する場合は、認証済みの共通APIによる連携が必要です。
-デモ表示と架空の発話・抽出結果を使用しています。音声認識、AI解析、動画再生・書き出し、認証、サーバー連携は未実装です。
-医師の評価・助言・採点は含みません。
-
-## 構成・起動
-
-ビルド不要のHTML/CSS/JavaScript。ルートのHTML/CSS/JavaScriptを配信します。
-`python -m http.server 8080`でローカル確認できます。
-GitHub Pagesはmainブランチのルートを公開します。
-`node verify-links.cjs`でディープリンクとCase別の保存・マージを検証できます。
-
-## 素材
-
-公開デモに実際の手術映像・患者情報・医師の個人名は含みません。
-サムネイルはCSSによるデモ表示です。
-Lucide v1.17.0（ISCライセンス）を同梱しています。LICENSE-lucide.txtをご覧ください。
-
-## 任意区間の追加・書き起こし
-
-「＋ 区間を追加」で区間名（任意）と開始・終了時刻を指定できます。手動区間はAI候補と区別して表示し、どちらの区間でも書き起こしを入力・修正できます。「ハイライトを保存」で区間・選択状態・書き起こしをCase別に保存し、再表示時に復元します。Outcomeは保持します。コメント欄は設けていません。
-
-音声の自動書き起こしは未接続です。手動追加の書き起こしは空欄で開始し、AI候補の既存発話はサンプルとして表示します。実音声からの取得には自社サーバーの音声認識APIとの接続が必要です。
-
-`node verify-manual.cjs`で区間の範囲・時刻形式・書き起こし保存・Case分離・Outcome保持を確認できます。
-
-## 話者表示サンプル
-
-AI候補の発話例は「術者」「指導者」の対話として表示します。役割は会話の内容と前後関係に基づく例であり、実音声の自動判定ではありません。年齢・性別・声質・上下関係の推測で役割を決めません。入力項目は追加せず、既存の書き起こし欄で役割名と発話をまとめて修正できます。保存済みの書き起こしは上書きしません。
+このリポジトリのindex.htmlは旧URLからの転送用です。Caseのハッシュを引き継ぎます。今後の機能変更はtelepro-collaboration-hub側で行います。

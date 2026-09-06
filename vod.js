@@ -27,7 +27,7 @@ function open(index,view='highlights'){
   if(view==='outcome')$('#tp-outcome-panel').scrollIntoView({block:'nearest'});
 }
 function fillOutcome(v){
-  const o=link.merge(v).outcome||{};
+  const o=link.merge({...v,id:v.recordId}).outcome||{};
   for(const key of ['minutes','bloodLoss','stay','intra','post','term','grade'])$('#tp-'+key).value=o[key]??(key==='term'?'術後出血':key==='grade'?'I':'');
   $('#tp-complications').hidden=$('#tp-post').value!=='present';$('#tp-outcome-status').textContent='';
 }

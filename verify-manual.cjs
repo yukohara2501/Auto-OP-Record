@@ -1,0 +1,15 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const code=fs.readFileSync(__dirname+'/vod.js','utf8');
+const storage=new Map();const ctx=vm.createContext({localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)}});
+vm.runInContext(fs.readFileSync(__dirname+'/case-link.js','utf8'),ctx);
+vm.runInContext(code.slice(code.indexOf('const parse='),code.indexOf('function getClips')),ctx);
+vm.runInContext(code.slice(code.indexOf('function createManualClip('),code.indexOf('function closeAddForm')),ctx);
+const clip=ctx.createManualClip('手動区間','00:05:00','00:06:30',600);
+assert.equal(clip.start,300);assert.equal(clip.end,390);assert.equal(clip.source,'manual');assert.equal(clip.transcript,'');
+assert.equal(ctx.createManualClip('','00:00:00','00:10:00',600).end,600);
+for(const [a,b] of [['00:00:00','00:00:00'],['00:06:30','00:05:00'],['00:00:00','00:10:01'],['bad','00:05:00'],['00:60:00','01:01:00']])assert.throws(()=>ctx.createManualClip('',a,b,600));
+clip.transcript='発話の書き起こし\n<script>これは文字列</script>';
+const bridge=ctx.TeleproCaseLink;bridge.save('A',{outcome:{minutes:'248'}});bridge.save('A',{highlights:{clips:[clip]}});
+const saved=bridge.merge({id:'A'});assert.equal(saved.outcome.minutes,'248');assert.equal(saved.highlights.clips[0].transcript,clip.transcript);assert.equal(saved.highlights.clips[0].source,'manual');assert.equal(bridge.merge({id:'B'}).highlights,undefined);
+bridge.save('A',{outcome:{minutes:'250'}});assert.equal(bridge.merge({id:'A'}).highlights.clips[0].transcript,clip.transcript);
+console.log('Manual interval validation, transcript persistence, Case isolation and Outcome preservation passed.');

@@ -5,13 +5,19 @@ const $=s=>root.querySelector(s);
 const link=TeleproCaseLink;
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const videos=link.catalogue(TELEPRO_DEMO_CASES).map((r,i)=>({...r,recordId:r.id,id:r.caseId||r.id,seconds:r.seconds||0,duration:[Math.floor((r.seconds||0)/3600),Math.floor((r.seconds||0)/60)%60,(r.seconds||0)%60].map(x=>String(x).padStart(2,'0')).join(':'),thumb:i%2?'b':'',state:r.highlights?'saved':'ready'}));
-const templates=[{title:'デバイスの使い方についての説明',start:740,end:850,quote:'「この器具は、先端の向きを見ながら操作してください。」',speech:762},{title:'操作についての質問と応答',start:2500,end:2630,quote:'「いまの操作について、もう一度確認してもいいですか。」',speech:2523},{title:'次の工程についての確認',start:4330,end:4470,quote:'「次の工程に移る前に、ここを確認しましょう。」',speech:4364}];
+const templates=[{"title":"術野の確認についての対話","start":740,"end":850,"speech":762,"quote":"術者：この境界を確認していますが、奥側が見えにくいです。\n指導者：操作を進める前に、見えている範囲を教えてください。\n術者：手前の境界は見えています。奥側をもう一度確認します。"},{"title":"予定と実際の違いについての相談","start":2500,"end":2630,"speech":2523,"quote":"術者：予定した進め方では、ここから先が難しそうです。\n指導者：どこが予定と違っていますか。\n術者：想定より視野が狭く、同じ方向から続けにくいです。\n指導者：では、今の状況を一緒に確認しましょう。"},{"title":"操作の意図についての確認","start":4330,"end":4470,"speech":4364,"quote":"指導者：今、手を止めたのは何を確認するためですか。\n術者：次の操作に進む前に、周囲との位置関係を確認するためです。\n指導者：どこまで確認できましたか。\n術者：手前は確認できました。奥側はまだ確認中です。"}];
 let active=0,selected=0;const jobs={};const opts={accent:'#954494',entry:'label'};
 const clock=n=>[Math.floor(n/3600),Math.floor(n/60)%60,n%60].map(v=>String(v).padStart(2,'0')).join(':');
 const parse=s=>{if(!/^\d{2}:\d{2}:\d{2}$/.test(s))return NaN;const a=s.split(':').map(Number);return a[1]<60&&a[2]<60?a[0]*3600+a[1]*60+a[2]:NaN;};
 function getClips(index){if(!jobs[index] && videos[index].highlights?.clips?.length)jobs[index]=structuredClone(videos[index].highlights.clips);if(!jobs[index]){const factor=Math.min(1,videos[index].seconds/4800);jobs[index]=templates.map(x=>({...x,start:Math.floor(x.start*factor),end:Math.floor(x.end*factor),speech:Math.floor(x.speech*factor),included:true}));}return jobs[index].map(c=>{c.source ||= 'ai';c.transcript ??= c.quote||'';return c;});}
 function drawLibrary(){const query=$('#tp-ref').value.trim();const items=videos.map((v,i)=>({v,i})).filter(({v})=>v.seconds>0&&(!query||[v.id,v.procedure,v.requester].join(' ').includes(query)));$('#tp-count').textContent=items.length+'件の動画';$('#tp-grid').innerHTML=items.map(({v,i})=>`<article class="tp-card"><div class="tp-thumb ${v.thumb}" role="img" aria-label="デモ動画のプレースホルダー"><span class="tp-duration">${v.duration}</span></div><h3>${escape(v.procedure)}</h3><p class="tp-case-id">${escape(v.id)}</p><dl class="tp-meta"><dt>YDT</dt><dd>${escape(v.date)}</dd><dt>Owner</dt><dd>${escape(v.requester)}</dd><dt>Room</dt><dd>${escape(v.from)}</dd><dt>Category</dt><dd>LOCAL REC</dd><dt>Access</dt><dd>Demo</dd></dl><div class="tp-action"><span class="tp-tag">${v.state==='saved'?'ハイライト保存済み':v.state==='ready'?'候補 3場面':v.state==='processing'?'候補を作成中':'音声付き'}</span><button class="tp-btn tp-open ${opts.entry==='label'?'tp-primary':''}" data-open="${i}">${v.state==='saved'?'ハイライトを開く':v.state==='ready'?'候補を確認':v.state==='processing'?'処理状況':'ハイライト作成'}</button></div></article>`).join('')||'<p class="tp-empty">該当する動画がありません</p>';}
 function totals(){const c=getClips(active).filter(x=>x.included);const duration=c.reduce((n,x)=>n+x.end-x.start,0);$('#tp-total').textContent=c.length+'場面を選択 · 合計 '+Math.floor(duration/60)+'分'+String(duration%60).padStart(2,'0')+'秒';$('#tp-save').disabled=!c.length;}
+function renderTranscript(value){
+  $('#tp-quote').innerHTML=value?value.split('\n').map(line=>{
+    const match=/^(術者|指導者|話者不明)[：:]\s*(.*)$/.exec(line);
+    return match?`<span class="tp-dialogue-line"><strong class="tp-speaker ${match[1]==='術者'?'operator':match[1]==='指導者'?'instructor':'unknown'}">${escape(match[1])}</strong><span>${escape(match[2])}</span></span>`:`<span class="tp-dialogue-line">${escape(line)}</span>`;
+  }).join(''):'書き起こしは未入力です。';
+}
 function drawEditor(){
   const clips=getClips(active);
   $('#tp-clips').innerHTML=clips.map((c,i)=>`<div class="tp-clip ${i===selected?'selected':''}">
@@ -20,10 +26,10 @@ function drawEditor(){
     <span class="tp-source ${c.source==='manual'?'manual':''}">${c.source==='manual'?'手動追加':'AI候補'}</span></div>
     ${i===selected?`<div class="tp-trim"><div class="tp-trimfields"><label>開始<input type="text" data-bound="start" value="${clock(c.start)}" aria-label="切り出し開始時刻"></label><label>終了<input type="text" data-bound="end" value="${clock(c.end)}" aria-label="切り出し終了時刻"></label></div>
     <div class="tp-nudge"><button data-nudge="start">開始を10秒前へ</button><button data-nudge="end">終了を10秒後へ</button></div>
-    <label class="tp-transcript-label">この区間の書き起こし<textarea data-transcript="${i}" rows="4" placeholder="この区間の発話を入力・修正できます。">${escape(c.transcript)}</textarea></label>
-    <p class="tp-transcript-note">${c.source==='manual'?'デモでは音声の自動書き起こしは未接続です。入力した内容を区間と一緒に保存できます。':'AI候補の発話はサンプルです。書き起こしは修正できます。'}</p></div>`:''}</div>`).join('');
+    <label class="tp-transcript-label">この区間の書き起こし<textarea data-transcript="${i}" rows="6" placeholder="この区間の発話を入力・修正できます。">${escape(c.transcript)}</textarea></label>
+    <p class="tp-transcript-note">${c.source==='manual'?'デモでは音声の自動書き起こしは未接続です。入力した内容を区間と一緒に保存できます。':'会話内容に基づく話者表示のサンプルです。役割名もこの欄で修正できます。'}</p></div>`:''}</div>`).join('');
   const c=clips[selected];
-  $('#tp-quote').textContent=c.transcript||'書き起こしは未入力です。';
+  renderTranscript(c.transcript);
   $('#tp-quote-time').textContent=clock(c.start)+' — '+clock(c.end)+(c.source==='manual'?' · 手動追加':' · AI候補（サンプル）');
   $('#tp-preview-time').textContent=clock(c.start)+' — '+clock(c.end);$('#tp-preview-image').className='tp-thumb '+videos[active].thumb;
   $('#tp-full-duration').textContent=videos[active].duration;$('#tp-endtime').textContent=clock(videos[active].seconds);
@@ -51,7 +57,7 @@ $('#tp-add-form').addEventListener('submit',e=>{
 root.addEventListener('input',e=>{
   if(e.target.dataset.transcript===undefined)return;
   const c=getClips(active)[Number(e.target.dataset.transcript)];c.transcript=e.target.value;
-  $('#tp-quote').textContent=c.transcript||'書き起こしは未入力です。';$('#tp-save-status').textContent='未保存の変更があります。';
+  renderTranscript(c.transcript);$('#tp-save-status').textContent='未保存の変更があります。';
 });
 
 function showReady(){ $('#tp-progress').hidden=true;$('#tp-ready').hidden=false;drawEditor();}

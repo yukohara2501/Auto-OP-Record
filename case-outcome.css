@@ -16,3 +16,11 @@
 #tp-vod .tp-transcript-note{font-size:11px;line-height:1.6;color:#62717a;margin:6px 0 0}
 #tp-vod .tp-quote{white-space:pre-wrap;overflow-wrap:anywhere}
 #tp-vod .tp-clipchoose{overflow-wrap:anywhere}
+
+#tp-vod .tp-dialogue-line{display:flex;align-items:flex-start;gap:10px;margin:0 0 12px;white-space:pre-wrap}
+#tp-vod .tp-speaker{flex-shrink:0;min-width:52px;padding:2px 7px;border-radius:3px;font-size:11px;text-align:center;font-weight:600}
+#tp-vod .tp-speaker.operator{color:#245966;background:#e4eff2}
+#tp-vod .tp-speaker.instructor{color:#7c3b7c;background:#f3e8f3}
+#tp-vod .tp-speaker.unknown{color:#59636b;background:#eef0f2}
+
+@media(max-width:1200px){#tp-vod .tp-case-layout .tp-editor{grid-template-columns:minmax(0,1fr)}}
